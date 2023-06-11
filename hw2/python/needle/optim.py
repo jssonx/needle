@@ -25,7 +25,13 @@ class SGD(Optimizer):
 
     def step(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        for key, param in enumerate(self.params):
+          if key in self.u:
+            self.u[key].data = self.momentum * self.u[key].data + (1 - self.momentum) \
+            * (param.grad.data + self.weight_decay * param.data) 
+          else:
+            self.u[key] = (1 - self.momentum) * (param.grad.data + self.weight_decay * param.data)
+          param.data = param.data - self.lr * self.u[key].data  
         ### END YOUR SOLUTION
 
 
@@ -52,5 +58,15 @@ class Adam(Optimizer):
 
     def step(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.t += 1
+        for key, param in enumerate(self.params):
+          penalized_grad = (param.grad + self.weight_decay * param).data 
+          if key not in self.m:
+            self.m[key] = ndl.init.zeros(*param.grad.shape)
+            self.v[key] = ndl.init.zeros(*param.grad.shape)
+          self.m[key].data = self.beta1 * self.m[key].data + (1 - self.beta1) * penalized_grad
+          self.v[key].data = self.beta2 * self.v[key].data + (1 - self.beta2) * penalized_grad ** 2
+          corrected_m = self.m[key].data / (1 - self.beta1 ** self.t)
+          corrected_v = self.v[key].data / (1 - self.beta2 ** self.t)
+          param.data = param.data - self.lr * corrected_m / (corrected_v ** 0.5 + self.eps)
         ### END YOUR SOLUTION

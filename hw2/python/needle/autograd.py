@@ -1,9 +1,10 @@
 """Core data structures."""
 import needle
-from typing import List, Optional, NamedTuple, Tuple, Union
+from typing import Dict, List, Optional, NamedTuple, Tuple, Union
 from collections import namedtuple
 import numpy
 from needle import init
+
 
 # needle version
 LAZY_MODE = False
@@ -362,11 +363,12 @@ class Tensor(Value):
             return needle.ops.EWiseMul()(self, other)
         else:
             return needle.ops.MulScalar(other)(self)
-
+    
     def __pow__(self, other):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        if isinstance(other, Tensor):
+            raise NotImplementedError()
+        else:
+            return needle.ops.PowerScalar(other)(self)
 
     def __sub__(self, other):
         if isinstance(other, Tensor):
