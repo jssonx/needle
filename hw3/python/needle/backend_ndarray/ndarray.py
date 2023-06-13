@@ -4,6 +4,7 @@ from functools import reduce
 import numpy as np
 from . import ndarray_backend_numpy
 from . import ndarray_backend_cpu
+import numpy
 
 # math.prod not in Python 3.7
 def prod(x):
@@ -241,7 +242,13 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if prod(new_shape) != prod(self._shape):
+            raise ValueError("Product of current shape is not equal to \
+                              the product of the new shape!")
+        if not self.is_compact():
+            raise ValueError("The matrix is not compact!")
+
+        return NDArray.make(new_shape, NDArray.compact_strides(new_shape), self._device, self._handle)
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -264,7 +271,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = tuple(np.array(self._shape)[list(new_axes)])
+        new_strides = tuple(np.array(self._strides)[list(new_axes)])
+        return NDArray.make(new_shape, new_strides, self._device, self._handle)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -283,9 +292,16 @@ class NDArray:
             NDArray: the new NDArray object with the new broadcast shape; should
             point to the same memory as the original array.
         """
-
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        assert(len(self._shape) == len(new_shape))
+        for x, y in zip(self._shape, new_shape):
+            assert(x == y or x == 1)
+        
+        new_strides = list(self._strides)
+        for i in range(len(self._shape)):
+            if self._shape[i] != new_shape[i]:
+                new_strides[i] = 0
+        return NDArray.make(new_shape, tuple(new_strides), self._device, self._handle)
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -348,7 +364,10 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = [(sl.stop - sl.start + sl.step - 1) // sl.step for sl in idxs]
+        offset = sum([sl.start * st for sl, st in zip(idxs, self._strides)])
+        new_strides = tuple([st * sl.step for st, sl in zip(self._strides, idxs)])
+        return NDArray.make(new_shape, new_strides, self._device, self._handle, offset)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):
